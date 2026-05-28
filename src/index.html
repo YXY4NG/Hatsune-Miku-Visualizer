@@ -5,13 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
   </head>
    <body>
-    <canvas id="bg-canvas"></canvas>
     <div id="vignette"></div>
     <div id="overlay">
       <button class="play" disabled>Play</button>
     </div>
     <div id="container">
-      <p id="lyrics"><span id="text"></span></p>
+      <button id="prev-page" class="page-nav" disabled>‹</button>
+      <div id="book">
+        <div id="page">
+          <div id="page-label"></div>
+          <p id="lyrics"><span id="text"></span></p>
+        </div>
+      </div>
+      <button id="next-page" class="page-nav" disabled>›</button>
     </div>
     <div id="media"></div>
     <div id="header">
