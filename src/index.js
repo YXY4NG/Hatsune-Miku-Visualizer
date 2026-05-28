@@ -53,7 +53,7 @@ const drawParticles = () => {
     }
     ctx.beginPath();
     ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-    ctx.fillStyle = `rgba(255, 255, 255, ${p.opacity})`;
+    ctx.fillStyle = `rgba(120, 120, 120, ${p.opacity})`;
     ctx.fill();
   }
   requestAnimationFrame(drawParticles);
@@ -84,8 +84,6 @@ const positionEl = document.querySelector("#position strong");
 const artistSpan = document.querySelector("#artist span");
 const songSpan = document.querySelector("#song span");
 const seekbar = document.querySelector("#seekbar");
-const skySunset = document.querySelector("#sky-sunset");
-let sunsetTriggered = false;
 let songDuration = 0;
 
 function onAppReady(app) {
@@ -144,8 +142,6 @@ function onThrottledTimeUpdate(position) {
   positionEl.textContent = String(Math.floor(position));
 
   if (songDuration > 0) {
-    const pastMidpoint = position > songDuration / 2;
-    skySunset.classList.toggle("active", pastMidpoint);
     seekbar.value = (position / songDuration) * 100;
   }
 }
