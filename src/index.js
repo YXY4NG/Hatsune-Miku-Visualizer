@@ -1,12 +1,9 @@
-import $ from "jquery";
-window.$ = $;
-window.jQuery = $;
-import "turn.js";
 import { Player } from "textalive-app-api";
+const $ = window.jQuery;
 
 // ---- Config ----
 const SONG_URL = "https://piapro.jp/t/zoqO/20251214200738";
-const APP_TOKEN = "YOUR_APP_TOKEN";
+const APP_TOKEN = "1HJzpsZ11CfoUPrr";
 
 // ---- Page splits (ms) ----
 const pages = [
@@ -21,6 +18,8 @@ const pages = [
   { start: 218000, end: 246000,   label: "Verse 5"  },
   { start: 246000, end: 99999999, label: "Ending"   },
 ];
+
+let revealedChars = new Set();
 
 // ---- DOM refs ----
 const positionEl  = document.querySelector("#position strong");
@@ -110,11 +109,23 @@ function onAppReady(app) {
     });
 
     seekbar.addEventListener("input", () => {
-      if (player.video && songDuration > 0) {
-        const seekTo = (seekbar.value / 100) * songDuration;
-        player.requestMediaSeek(seekTo);
+  if (player.video && songDuration > 0) {
+    const seekTo = (seekbar.value / 100) * songDuration;
+    // Un-reveal any chars whose start time is after the new position
+    document.querySelectorAll("span.char.visible").forEach((s) => {
+      if (parseFloat(s.dataset.start) > seekTo) {
+        s.classList.remove("visible");
       }
     });
+    // Also clean up revealedChars set so they can be re-revealed
+    const toRemove = [];
+    revealedChars.forEach((c) => {
+      if (c.startTime > seekTo) toRemove.push(c);
+    });
+    toRemove.forEach((c) => revealedChars.delete(c));
+    player.requestMediaSeek(seekTo);
+  }
+});
 
     prevPageBtn.addEventListener("click", () => {
       if (currentPageIndex > 0) {
@@ -213,17 +224,31 @@ function onVideoReady(v) {
     flipbook.insertBefore(blank, insertBefore);
   });
 
-  // Slot lyrics before Turn.js init
-  let phrase = player.video.firstPhrase;
-  while (phrase) {
+  // Slot lyrics character-by-character, with per-character spans
+  let lastPhrasePage = -1;
+  let char = player.video.firstChar;
+  while (char) {
     const pageIdx = pages.findIndex(
-      (pg) => phrase.startTime >= pg.start && phrase.startTime < pg.end
+      (pg) => char.startTime >= pg.start && char.startTime < pg.end
     );
     if (pageIdx !== -1) {
       const el = document.getElementById(`lyric-${pageIdx}`);
-      if (el) el.textContent += (el.textContent ? "\n" : "") + phrase.text;
+      if (el) {
+        // line break before a new phrase on the same page
+        const currentPhrase = char.parent?.parent;
+        const previousPhrase = char.previous?.parent?.parent;
+        if (lastPhrasePage === pageIdx && currentPhrase !== previousPhrase) {
+          el.appendChild(document.createElement("br"));
+      }
+        const span = document.createElement("span");
+        span.className = "char";
+        span.textContent = char.text;
+        span.dataset.start = char.startTime;
+        el.appendChild(span);
+        lastPhrasePage = pageIdx;
+      }
     }
-    phrase = phrase.next;
+    char = char.next;
   }
 
   // Init Turn.js
@@ -262,6 +287,21 @@ function onThrottledTimeUpdate(position) {
     seekbar.value = (position / songDuration) * 100;
   }
 
+  // Reveal characters whose start time has arrived
+  if (player.video) {
+    let c = player.video.firstChar;
+    while (c) {
+      if (c.startTime <= position && !revealedChars.has(c)) {
+        const spans = document.querySelectorAll(`span.char[data-start="${c.startTime}"]`);
+        spans.forEach((s) => s.classList.add("visible"));
+        revealedChars.add(c);
+      } else if (c.startTime > position) {
+        break;
+      }
+      c = c.next;
+    }
+  }
+
   if (!bookOpened) return;
 
   // Jump to Fin when song ends
@@ -288,6 +328,8 @@ function onPause() {}
 function onStop() {
   currentPageIndex = -1;
   bookOpened = false;
+  revealedChars.clear();
+  document.querySelectorAll("span.char").forEach((s) => s.classList.remove("visible"));
   if (flipbookReady) {
     const lastPage = $("#flipbook").turn("pages");
     $("#flipbook").turn("page", lastPage);

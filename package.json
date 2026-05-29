@@ -23,6 +23,7 @@
   },
   "homepage": "https://github.com/TextAliveJp/textalive-app-basic#readme",
   "dependencies": {
+    "jquery": "^4.0.0",
     "textalive-app-api": "^0.4.0",
     "turn.js": "^1.0.5"
   },
