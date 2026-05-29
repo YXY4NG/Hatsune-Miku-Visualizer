@@ -105,7 +105,6 @@ function buildPages() {
     { start: (2 * 60 + 21) * 1000, label: "chorus 2" },
     { start: (2 * 60 + 48) * 1000, label: "verse 4" },
     { start: (3 * 60 + 11) * 1000, label: "chorus 3" },
-    { start: (3 * 60 + 38) * 1000, label: "verse 5" },
     { start: (4 * 60 + 6) * 1000,  label: "ending" },
   ];
   // Build pages: each page's end = next page's start (or song end for the last)
