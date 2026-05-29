@@ -134,31 +134,41 @@ function onAppReady(app) {
   }
 }
 
-// <<<<<<< HEAD
 // function buildPages() {
+//   pages = [];
 //   const duration = player.video.duration;
+//   const choruses = player.getChoruses ? player.getChoruses() : [];
 
-//   // Page boundaries in milliseconds, with a label per page
-//   // Each entry is the START time of the page
-//   const manualPages = [
-//     { start: 0,                    label: "intro" },
-//     { start: 28 * 1000,            label: "verse 1" },
-//     { start: 41 * 1000,            label: "verse 2" },
-//     { start: (1 * 60 + 10) * 1000, label: "chorus 1" },
-//     { start: (1 * 60 + 51) * 1000, label: "verse 3" },
-//     { start: (2 * 60 + 21) * 1000, label: "chorus 2" },
-//     { start: (2 * 60 + 48) * 1000, label: "verse 4" },
-//     { start: (3 * 60 + 11) * 1000, label: "chorus 3" },
-//     { start: (3 * 60 + 37) * 1000,  label: "ending" },
-//   ];
-//   // Build pages: each page's end = next page's start (or song end for the last)
-//   pages = manualPages.map((p, i) => ({
-//     start: p.start,
-//     end: i < manualPages.length - 1 ? manualPages[i + 1].start : duration,
-//     label: p.label,
-//   }));
+//   if (choruses && choruses.length > 0) {
+//     let cursor = 0;
+//     for (const chorus of choruses) {
+//       // verse/gap before this chorus
+//       if (chorus.startTime > cursor + 1000) {
+//         pages.push({ start: cursor, end: chorus.startTime });
+//       }
+//       // the chorus itself
+//       pages.push({ start: chorus.startTime, end: chorus.endTime });
+//       cursor = chorus.endTime;
+//     }
+//     // trailing section after the last chorus
+//     if (duration > cursor + 1000) {
+//       pages.push({ start: cursor, end: duration });
+//     }
+//   }
 
-//   console.log("Built", pages.length, "manual pages:", pages);
+//   // Fallback: if sections are sparse, divide evenly into 6 pages
+//   if (pages.length < 2) {
+//     pages = [];
+//     const n = 6;
+//     for (let i = 0; i < n; i++) {
+//       pages.push({
+//         start: (duration / n) * i,
+//         end: (duration / n) * (i + 1),
+//       });
+//     }
+//   }
+
+//   console.log("Built", pages.length, "pages:", pages);
 // }
 
 // function showPage(index) {
@@ -172,13 +182,12 @@ function onAppReady(app) {
 //   page.style.animation = "";
 
 //   // label like "3 / 11"
-//   pageLabel.textContent = `${index + 1} / ${pages.length} · ${pages[index].label}`;
+//   pageLabel.textContent = `${index + 1} / ${pages.length}`;
 
 //   // enable/disable arrows at the ends
 //   prevPageBtn.disabled = index === 0;
 //   nextPageBtn.disabled = index === pages.length - 1;
 // }
-
 
 function onVideoReady(v) {
   artistSpan.textContent = player.data.song.artist.name;
