@@ -4,38 +4,39 @@
     <link rel="stylesheet" href="index.css" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
   </head>
-   <body>
-    <div id="vignette"></div>
-    <div id="overlay">
-      <button class="play" disabled>Play</button>
-    </div>
+  <body>
+
     <div id="container">
-      <button id="prev-page" class="page-nav" disabled>‹</button>
-      <div id="book">
-        <div id="page">
-          <div id="page-label"></div>
-          <p id="lyrics"><span id="text"></span></p>
-        </div>
+      <button id="prev-page" class="page-nav" disabled></button>
+      <div class="flipbook" id="flipbook">
+        <div class="hard">After the Curtain</div>
+        <div class="hard"></div>
+        <div class="hard"></div>
+        <div class="hard">Fin.</div>
       </div>
-      <button id="next-page" class="page-nav" disabled>›</button>
+      <button id="next-page" class="page-nav" disabled></button>
     </div>
+
     <div id="media"></div>
+
     <div id="header">
       <div id="meta">
         <div id="artist"><strong>artist</strong> <span>-</span></div>
         <div id="song"><strong>track</strong> <span>-</span></div>
       </div>
     </div>
+
     <div id="footer">
       <p><span id="position"><strong>-</strong> ms</span></p>
       <div id="control" style="display: none">
-        <button class="play" disabled>Play</button>
-        <button id="jump" disabled>Jump</button>
+        <button id="play">Play</button>
         <button id="pause" disabled>Pause</button>
         <button id="rewind" disabled>Rewind</button>
         <input type="range" id="seekbar" min="0" max="100" value="0" disabled />
       </div>
+      <div id="page-label"></div>
     </div>
+
     <script src="./index.js" type="module"></script>
   </body>
 </html>
