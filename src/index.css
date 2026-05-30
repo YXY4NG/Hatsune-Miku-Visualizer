@@ -46,6 +46,11 @@ body::after {
   height: 600px;
   box-shadow: 0 20px 60px rgba(0,0,0,0.18), 0 4px 12px rgba(0,0,0,0.1);
   cursor: pointer;
+  visibility: hidden;
+}
+
+.flipbook.ready {
+  visibility: visible;
 }
 
 .flipbook.open {
@@ -69,13 +74,13 @@ body::after {
 .flipbook .page {
   background-color: var(--paper);
   background-image: linear-gradient(var(--paper-line) 1px, transparent 1px);
-  background-size: 100% 2.4rem;
+  background-size: 100% 3rem;   /* was 2.4rem — must equal .lyric line-height */
   border-left: 3px solid var(--margin-red);
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   justify-content: flex-start;
-  padding: 2.4rem 2rem 2rem 3.5rem;
+  padding: 3rem 2rem 3rem 3.5rem;
   overflow: hidden;
   position: relative;
 }
@@ -100,16 +105,18 @@ body::after {
   font-style: italic;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  margin-bottom: 1.2rem;
+  margin: 0 0 2.28rem 0;
   padding-left: 0.25rem;
   opacity: 0.9;
+  line-height: 0.72rem;
+  height: 0.72rem;
 }
 
 .lyric {
-  font-size: 1.1rem;
+  font-size: 2rem;
   font-weight: 400;
   text-align: left;
-  line-height: 2.4rem;
+  line-height: 3rem;          /* was 2.4rem */
   color: var(--pencil);
   white-space: normal;
   max-width: 100%;
@@ -231,4 +238,24 @@ body::after {
 
 .char.visible {
   opacity: 1;
+}
+
+#loading {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #e8e8e8;
+  font-family: 'Klee One', cursive;
+  font-size: 1.2rem;
+  color: var(--pencil-soft);
+  letter-spacing: 0.1em;
+  z-index: 200;
+  transition: opacity 0.6s ease;
+}
+
+#loading.hidden {
+  opacity: 0;
+  pointer-events: none;
 }

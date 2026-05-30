@@ -15,8 +15,7 @@ const pages = [
   { start: 141000, end: 168000,   label: "Chorus 2" },
   { start: 168000, end: 191000,   label: "Verse 4"  },
   { start: 191000, end: 218000,   label: "Chorus 3" },
-  { start: 218000, end: 246000,   label: "Verse 5"  },
-  { start: 246000, end: 99999999, label: "Ending"   },
+  { start: 218000, end: 99999999,   label: "Verse 5"  },
 ];
 
 let revealedChars = new Set();
@@ -228,8 +227,9 @@ function onVideoReady(v) {
   let lastPhrasePage = -1;
   let char = player.video.firstChar;
   while (char) {
+    const phraseStart = char.parent?.parent?.startTime ?? char.startTime;
     const pageIdx = pages.findIndex(
-      (pg) => char.startTime >= pg.start && char.startTime < pg.end
+      (pg) => phraseStart >= pg.start && phraseStart < pg.end
     );
     if (pageIdx !== -1) {
       const el = document.getElementById(`lyric-${pageIdx}`);
@@ -264,6 +264,8 @@ function onVideoReady(v) {
   });
 
   flipbookReady = true;
+  document.getElementById("flipbook").classList.add("ready");
+  document.getElementById("loading").classList.add("hidden");
 
   // Disable ALL mouse interaction — song controls page turning
   $("#flipbook").turn("disable", true);
