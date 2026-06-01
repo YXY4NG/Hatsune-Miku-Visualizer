@@ -253,8 +253,8 @@ function onVideoReady(v) {
 
   // Init Turn.js
   $("#flipbook").turn({
-    width: 1000,
-    height: 600,
+    width: 800,
+    height: 500,
     autoCenter: true,
     display: "double",
     acceleration: true,
@@ -281,6 +281,9 @@ function onVideoReady(v) {
 function onTimerReady(t) {
   playerReady = true;
   document.querySelectorAll("button, input").forEach((el) => (el.disabled = false));
+  // Start on the cover — no page navigation yet
+  prevPageBtn.disabled = true;
+  nextPageBtn.disabled = true;
 }
 
 function onThrottledTimeUpdate(position) {
@@ -312,6 +315,8 @@ function onThrottledTimeUpdate(position) {
     currentPageIndex = -1;
     const totalPages = $("#flipbook").turn("pages");
     $("#flipbook").turn("page", totalPages);
+    prevPageBtn.disabled = true;
+    nextPageBtn.disabled = true;
     return;
   }
 

@@ -43,7 +43,7 @@ body::after {
 /* ---- Flipbook ---- */
 /* Turn.js sets width automatically based on single/double display mode */
 .flipbook {
-  height: 600px;
+  height: 500px;
   box-shadow: 0 20px 60px rgba(0,0,0,0.18), 0 4px 12px rgba(0,0,0,0.1);
   cursor: pointer;
   visibility: hidden;
@@ -59,8 +59,8 @@ body::after {
 
 /* Hard covers */
 .flipbook .hard {
-  background: #000000;
-  color: #ffffff;
+  background: #4a3528;
+  color: #f5ece0;
   font-family: 'Klee One', cursive;
   font-size: 1.3rem;
   font-weight: 600;
@@ -150,7 +150,7 @@ body::after {
 #header {
   position: fixed;
   top: 0; left: 0; right: 0;
-  padding: 1.2rem 1.5rem 1.2rem 4.5rem;
+  padding: 1.2rem 1.5rem 1.2rem 2.5rem;
   z-index: 50;
   display: flex;
   justify-content: space-between;
@@ -206,8 +206,8 @@ body::after {
 }
 
 #control button:hover:not(:disabled) {
-  background: var(--pencil);
-  color: var(--paper);
+  background: #4a3528;
+  color: #f5ece0;
 }
 
 #control button:disabled {
@@ -218,7 +218,7 @@ body::after {
 #seekbar {
   width: 160px;
   cursor: pointer;
-  accent-color: var(--pencil);
+  accent-color: #4a3528;
 }
 
 #media {
