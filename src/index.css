@@ -74,13 +74,19 @@ body::after {
 .flipbook .page {
   background-color: var(--paper);
   background-image: linear-gradient(var(--paper-line) 1px, transparent 1px);
-  background-size: 100% 3rem;   /* was 2.4rem — must equal .lyric line-height */
+  background-size: 100% 3rem;
   border-left: 3px solid var(--margin-red);
+  width: 400px;
+  height: 500px;
+}
+
+.flipbook .page-content {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   justify-content: flex-start;
   padding: 3rem 2rem 3rem 3.5rem;
+  height: 100%;
   overflow: hidden;
   position: relative;
 }

@@ -38,6 +38,7 @@ let currentPageIndex = -1;
 let flipbookReady    = false;
 let playerReady      = false;
 let bookOpened       = false;
+let isTurning        = false;
 
 // ---- Show page ----
 function showPage(index) {
@@ -213,8 +214,10 @@ function onVideoReady(v) {
     const div = document.createElement("div");
     div.className = "page";
     div.innerHTML = `
-      <p class="page-section">${page.label}</p>
-      <p class="lyric" id="lyric-${i}"></p>
+      <div class="page-content">
+        <p class="page-section">${page.label}</p>
+        <p class="lyric" id="lyric-${i}"></p>
+      </div>
     `;
     flipbook.insertBefore(div, insertBefore);
 
@@ -259,8 +262,15 @@ function onVideoReady(v) {
     display: "double",
     acceleration: true,
     gradients: true,
-    duration: 600,
+    duration: 2000,
     turnCorners: "",    // disable corner peel on hover
+  });
+
+  $("#flipbook").bind("start", function () {
+    isTurning = true;
+  });
+  $("#flipbook").bind("turned", function () {
+    isTurning = false;
   });
 
   flipbookReady = true;
