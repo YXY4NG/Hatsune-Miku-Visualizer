@@ -1,3 +1,10 @@
 node_modules
 .parcel-cache
+.cache
 dev
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+.vscode
+.idea
