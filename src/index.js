@@ -62,7 +62,7 @@ function showPage(index) {
 function openAndPlay() {
   if (!playerReady || bookOpened) return;
   bookOpened = true;
-  $("#flipbook").turn("next");
+  $("#flipbook").turn("page", 3);
   player.requestPlay();
 }
 
@@ -145,61 +145,6 @@ function onAppReady(app) {
   }
 }
 
-// function buildPages() {
-//   pages = [];
-//   const duration = player.video.duration;
-//   const choruses = player.getChoruses ? player.getChoruses() : [];
-
-//   if (choruses && choruses.length > 0) {
-//     let cursor = 0;
-//     for (const chorus of choruses) {
-//       // verse/gap before this chorus
-//       if (chorus.startTime > cursor + 1000) {
-//         pages.push({ start: cursor, end: chorus.startTime });
-//       }
-//       // the chorus itself
-//       pages.push({ start: chorus.startTime, end: chorus.endTime });
-//       cursor = chorus.endTime;
-//     }
-//     // trailing section after the last chorus
-//     if (duration > cursor + 1000) {
-//       pages.push({ start: cursor, end: duration });
-//     }
-//   }
-
-//   // Fallback: if sections are sparse, divide evenly into 6 pages
-//   if (pages.length < 2) {
-//     pages = [];
-//     const n = 6;
-//     for (let i = 0; i < n; i++) {
-//       pages.push({
-//         start: (duration / n) * i,
-//         end: (duration / n) * (i + 1),
-//       });
-//     }
-//   }
-
-//   console.log("Built", pages.length, "pages:", pages);
-// }
-
-// function showPage(index) {
-//   if (index < 0 || index >= pages.length) return;
-//   currentPageIndex = index;
-
-//   // re-trigger the page-in animation
-//   const page = document.querySelector("#page");
-//   page.style.animation = "none";
-//   void page.offsetWidth; // force reflow
-//   page.style.animation = "";
-
-//   // label like "3 / 11"
-//   pageLabel.textContent = `${index + 1} / ${pages.length}`;
-
-//   // enable/disable arrows at the ends
-//   prevPageBtn.disabled = index === 0;
-//   nextPageBtn.disabled = index === pages.length - 1;
-// }
-
 function onVideoReady(v) {
   artistSpan.textContent = player.data.song.artist.name;
   songSpan.textContent   = player.data.song.name;
@@ -262,8 +207,8 @@ function onVideoReady(v) {
     display: "double",
     acceleration: true,
     gradients: true,
-    duration: 2000,
-    turnCorners: "",    // disable corner peel on hover
+    duration: 1500,
+    turnCorners: "",
   });
 
   $("#flipbook").bind("start", function () {
