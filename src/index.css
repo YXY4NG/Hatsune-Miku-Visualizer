@@ -1,11 +1,11 @@
 @import url('https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&display=swap');
 
 :root {
-  --paper: #ffffff;
-  --paper-line: #d8d8d8;
-  --pencil: #000000;
+  --paper:       #ffffff;
+  --paper-line:  #d8d8d8;
+  --pencil:      #000000;
   --pencil-soft: #888888;
-  --margin-red: #555555;
+  --margin-red:  #555555;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -29,7 +29,6 @@ body::after {
   opacity: 0.5;
 }
 
-/* ---- Container ---- */
 #container {
   position: fixed;
   inset: 0;
@@ -41,23 +40,15 @@ body::after {
 }
 
 /* ---- Flipbook ---- */
-/* Turn.js sets width automatically based on single/double display mode */
 .flipbook {
   height: 500px;
   box-shadow: 0 20px 60px rgba(0,0,0,0.18), 0 4px 12px rgba(0,0,0,0.1);
   cursor: pointer;
   visibility: hidden;
 }
+.flipbook.ready { visibility: visible; }
+.flipbook.open  { cursor: default; }
 
-.flipbook.ready {
-  visibility: visible;
-}
-
-.flipbook.open {
-  cursor: default;
-}
-
-/* Hard covers */
 .flipbook .hard {
   background: #4a3528;
   color: #f5ece0;
@@ -70,7 +61,30 @@ body::after {
   letter-spacing: 0.1em;
 }
 
-/* ---- Inner notebook pages ---- */
+/* Hide the phantom second hard-cover page that shows as a shadow
+   when the book is closed on page 1. Turn.js renders it as a
+   visible right-hand spread; suppressing it removes the shadow. */
+.flipbook > .hard:nth-child(2) {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ---- Pages ---- */
+/*
+  Notebook rule grid: background-size 100% 3rem (= 48px).
+  padding-top must be a multiple of 3rem so the first text
+  baseline lands exactly on a rule.
+
+  Chosen layout (at 16px root):
+    top padding : 3rem   (48px)  → first rule at y=48
+    section label: 0.72rem tall + 2.28rem margin = 3rem total → one full rule slot
+    lyric starts : 6rem  (96px)  → on the 2nd rule
+    bottom pad  : 1.5rem (24px)
+    available H for lyric: 500 - 48(top) - 48(label+margin) - 24(bot) = 380px
+    available W : 400 - 56(left) - 32(right) = 312px
+
+  fitLyrics() MAX_H/MAX_W constants must match these values.
+*/
 .flipbook .page {
   background-color: var(--paper);
   background-image: linear-gradient(var(--paper-line) 1px, transparent 1px);
@@ -78,6 +92,7 @@ body::after {
   border-left: 3px solid var(--margin-red);
   width: 400px;
   height: 500px;
+  position: relative;
 }
 
 .flipbook .page-content {
@@ -85,7 +100,8 @@ body::after {
   flex-direction: column;
   align-items: flex-start;
   justify-content: flex-start;
-  padding: 3rem 2rem 3rem 3.5rem;
+  /* top = 3rem aligns content to the ruled grid */
+  padding: 3rem 2rem 1.5rem 3.5rem;
   height: 100%;
   overflow: hidden;
   position: relative;
@@ -97,39 +113,48 @@ body::after {
   inset: 0;
   background: linear-gradient(
     to right,
-    rgba(0,0,0,0.03) 0%,
-    transparent 6%,
-    transparent 94%,
-    rgba(0,0,0,0.025) 100%
+    rgba(0,0,0,0.03) 0%, transparent 6%,
+    transparent 94%, rgba(0,0,0,0.025) 100%
   );
   pointer-events: none;
 }
 
 .page-section {
-  font-size: 0.72rem;
+  flex-shrink: 0;
+  font-size: 0.72rem;         /* = 11.52px */
+  line-height: 0.72rem;
+  height: 0.72rem;
   color: var(--margin-red);
   font-style: italic;
   letter-spacing: 0.12em;
   text-transform: uppercase;
+  /* margin-bottom brings the total slot to exactly 3rem (one rule) */
   margin: 0 0 2.28rem 0;
   padding-left: 0.25rem;
   opacity: 0.9;
-  line-height: 0.72rem;
-  height: 0.72rem;
 }
 
+/*
+  Base lyric style — JS (fitLyrics) overrides font-size/line-height per page.
+  line-height is set to 3rem so every text line sits ON a ruled line.
+  fitLyrics steps down in 0.04rem increments; for each size it calculates
+  a proportional line-height. For best grid alignment, pass multiples of
+  3rem (48px) or keep the JS-computed lh close to those multiples.
+  overflow: visible lets the ruler measure real scroll height.
+*/
 .lyric {
-  font-size: 2rem;
+  font-size: 1.6rem;
   font-weight: 400;
-  text-align: left;
-  line-height: 3rem;          /* was 2.4rem */
+  line-height: 3rem;          /* matches rule grid; JS will override per page */
   color: var(--pencil);
   white-space: normal;
+  word-break: break-word;
   max-width: 100%;
   padding-left: 0.25rem;
+  overflow: visible;
 }
 
-/* ---- Page nav arrows ---- */
+/* ---- Page nav ---- */
 .page-nav {
   font-family: 'Klee One', cursive;
   font-size: 2.5rem;
@@ -141,16 +166,8 @@ body::after {
   transition: all 0.2s;
   z-index: 3;
 }
-
-.page-nav:hover:not(:disabled) {
-  color: var(--pencil);
-  transform: scale(1.2);
-}
-
-.page-nav:disabled {
-  opacity: 0.2;
-  cursor: not-allowed;
-}
+.page-nav:hover:not(:disabled) { color: var(--pencil); transform: scale(1.2); }
+.page-nav:disabled { opacity: 0.2; cursor: not-allowed; }
 
 /* ---- Header ---- */
 #header {
@@ -161,13 +178,7 @@ body::after {
   display: flex;
   justify-content: space-between;
 }
-
-#meta {
-  font-size: 0.8rem;
-  line-height: 1.8;
-  color: var(--pencil-soft);
-}
-
+#meta { font-size: 0.8rem; line-height: 1.8; color: var(--pencil-soft); }
 #meta strong { color: var(--pencil); }
 
 /* ---- Footer ---- */
@@ -180,24 +191,11 @@ body::after {
   align-items: center;
   z-index: 50;
 }
-
-#footer > p {
-  font-size: 0.7rem;
-  color: var(--pencil-soft);
-}
-
-#page-label {
-  font-size: 0.8rem;
-  color: var(--pencil-soft);
-  font-style: italic;
-}
+#footer > p  { font-size: 0.7rem; color: var(--pencil-soft); }
+#page-label  { font-size: 0.8rem; color: var(--pencil-soft); font-style: italic; }
 
 /* ---- Controls ---- */
-#control {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-}
+#control { display: flex; gap: 0.5rem; align-items: center; }
 
 #control button {
   font-family: 'Klee One', cursive;
@@ -210,22 +208,10 @@ body::after {
   cursor: pointer;
   transition: all 0.15s;
 }
+#control button:hover:not(:disabled) { background: #4a3528; color: #f5ece0; }
+#control button:disabled { opacity: 0.3; cursor: not-allowed; }
 
-#control button:hover:not(:disabled) {
-  background: #4a3528;
-  color: #f5ece0;
-}
-
-#control button:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
-}
-
-#seekbar {
-  width: 160px;
-  cursor: pointer;
-  accent-color: #4a3528;
-}
+#seekbar { width: 160px; cursor: pointer; accent-color: #4a3528; }
 
 #media {
   position: fixed;
@@ -236,16 +222,11 @@ body::after {
   overflow: hidden;
 }
 
-.char {
-  display: inline;
-  opacity: 0;
-  transition: opacity 0.5s ease;
-}
+/* ---- Lyric character reveal ---- */
+.char { display: inline; opacity: 0; transition: opacity 0.5s ease; }
+.char.visible { opacity: 1; }
 
-.char.visible {
-  opacity: 1;
-}
-
+/* ---- Loading screen ---- */
 #loading {
   position: fixed;
   inset: 0;
@@ -260,8 +241,4 @@ body::after {
   z-index: 200;
   transition: opacity 0.6s ease;
 }
-
-#loading.hidden {
-  opacity: 0;
-  pointer-events: none;
-}
+#loading.hidden { opacity: 0; pointer-events: none; }

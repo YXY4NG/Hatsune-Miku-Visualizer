@@ -15,7 +15,7 @@ const pages = [
   { start: 141000, end: 168000,   label: "Chorus 2" },
   { start: 168000, end: 191000,   label: "Verse 4"  },
   { start: 191000, end: 218000,   label: "Chorus 3" },
-  { start: 218000, end: 99999999,   label: "Verse 5"  },
+  { start: 218000, end: 99999999, label: "Verse 5"  },
 ];
 
 let revealedChars = new Set();
@@ -38,7 +38,60 @@ let currentPageIndex = -1;
 let flipbookReady    = false;
 let playerReady      = false;
 let bookOpened       = false;
-let isTurning        = false;
+
+// ---- Fit lyrics into their page box ----
+// Available area after layout changes in CSS:
+//   height: 500 - 48(top pad) - 48(label slot) - 24(bot pad) = 380px
+//   width:  400 - 56(left pad) - 32(right pad)               = 312px
+// Keep in sync with .page-content padding in index.css.
+function fitLyrics() {
+  const MAX_H = 380;
+  const MAX_W = 312;
+
+  const ruler = document.createElement("p");
+  Object.assign(ruler.style, {
+    position:    "fixed",
+    top:         "-9999px",
+    left:        "-9999px",
+    width:       MAX_W + "px",
+    fontFamily:  "'Klee One', cursive",
+    fontWeight:  "400",
+    whiteSpace:  "normal",
+    wordBreak:   "break-word",
+    margin:      "0",
+    padding:     "0",
+    visibility:  "hidden",
+  });
+  document.body.appendChild(ruler);
+
+  document.querySelectorAll(".lyric").forEach((el) => {
+    ruler.innerHTML = el.innerHTML;
+
+    // Step down from 1.6rem until the text fits, minimum 0.72rem.
+    // Line-height is kept as a multiple of 3rem (the rule grid) where possible,
+    // but at small sizes we simply use a tight proportional value.
+    for (let s = 1.6; s >= 0.72; s = Math.round((s - 0.04) * 100) / 100) {
+      // At 1.6rem, one rule slot (3rem = 48px) comfortably holds the line.
+      // At 0.72rem, we tighten to 1.15× to avoid wasted space.
+      const t  = (s - 0.72) / (1.6 - 0.72);
+      const lh = +(s * (1.15 + t * (1.5 - 1.15))).toFixed(3);
+      ruler.style.fontSize   = s  + "rem";
+      ruler.style.lineHeight = lh + "rem";
+
+      if (ruler.scrollHeight <= MAX_H) {
+        el.style.fontSize   = s  + "rem";
+        el.style.lineHeight = lh + "rem";
+        return;
+      }
+    }
+
+    // Fallback — absolute minimum
+    el.style.fontSize   = "0.72rem";
+    el.style.lineHeight = "1rem";
+  });
+
+  document.body.removeChild(ruler);
+}
 
 // ---- Show page ----
 function showPage(index) {
@@ -46,19 +99,18 @@ function showPage(index) {
   currentPageIndex = index;
 
   if (flipbookReady) {
-    const targetPage = index * 2 + 3;
-    const currentPage = $("#flipbook").turn("page");
-    if (currentPage !== targetPage) {
-      $("#flipbook").turn("page", targetPage);
+    const target = index * 2 + 3;
+    if ($("#flipbook").turn("page") !== target) {
+      $("#flipbook").turn("page", target);
     }
   }
 
-  if (pageLabel) pageLabel.textContent = `${index + 1} / ${pages.length}`;
-  if (prevPageBtn) prevPageBtn.disabled = index === 0;
-  if (nextPageBtn) nextPageBtn.disabled = index === pages.length - 1;
+  if (pageLabel)   pageLabel.textContent  = `${index + 1} / ${pages.length}`;
+  if (prevPageBtn) prevPageBtn.disabled   = index === 0;
+  if (nextPageBtn) nextPageBtn.disabled   = index === pages.length - 1;
 }
 
-// ---- Open and play ----
+// ---- Open book and start playback ----
 function openAndPlay() {
   if (!playerReady || bookOpened) return;
   bookOpened = true;
@@ -88,64 +140,51 @@ function onAppReady(app) {
 
     playBtn.addEventListener("click", () => {
       if (!playerReady) return;
-      if (!bookOpened) {
-        openAndPlay();
-      } else {
-        player.requestPlay();
-      }
+      bookOpened ? player.requestPlay() : openAndPlay();
     });
 
-    pauseBtn.addEventListener("click", () =>
-      player.video && player.requestPause()
-    );
+    pauseBtn.addEventListener("click", () => {
+      if (player.video) player.requestPause();
+    });
 
     rewindBtn.addEventListener("click", () => {
       if (!player.video) return;
       player.requestPause();
       player.requestMediaSeek(0);
-      bookOpened = false;
+      bookOpened       = false;
       currentPageIndex = -1;
       if (flipbookReady) $("#flipbook").turn("page", 1);
     });
 
     seekbar.addEventListener("input", () => {
-  if (player.video && songDuration > 0) {
-    const seekTo = (seekbar.value / 100) * songDuration;
-    // Un-reveal any chars whose start time is after the new position
-    document.querySelectorAll("span.char.visible").forEach((s) => {
-      if (parseFloat(s.dataset.start) > seekTo) {
-        s.classList.remove("visible");
-      }
+      if (!player.video || songDuration <= 0) return;
+      const seekTo = (seekbar.value / 100) * songDuration;
+
+      document.querySelectorAll("span.char.visible").forEach((s) => {
+        if (parseFloat(s.dataset.start) > seekTo) s.classList.remove("visible");
+      });
+      revealedChars.forEach((c) => {
+        if (c.startTime > seekTo) revealedChars.delete(c);
+      });
+
+      player.requestMediaSeek(seekTo);
     });
-    // Also clean up revealedChars set so they can be re-revealed
-    const toRemove = [];
-    revealedChars.forEach((c) => {
-      if (c.startTime > seekTo) toRemove.push(c);
-    });
-    toRemove.forEach((c) => revealedChars.delete(c));
-    player.requestMediaSeek(seekTo);
-  }
-});
 
     prevPageBtn.addEventListener("click", () => {
-      if (currentPageIndex > 0) {
+      if (currentPageIndex > 0)
         player.requestMediaSeek(pages[currentPageIndex - 1].start);
-      }
     });
 
     nextPageBtn.addEventListener("click", () => {
-      if (currentPageIndex < pages.length - 1) {
+      if (currentPageIndex < pages.length - 1)
         player.requestMediaSeek(pages[currentPageIndex + 1].start);
-      }
     });
   }
 
-  if (!app.songUrl) {
-    player.createFromSongUrl(SONG_URL);
-  }
+  if (!app.songUrl) player.createFromSongUrl(SONG_URL);
 }
 
-function onVideoReady(v) {
+function onVideoReady() {
   artistSpan.textContent = player.data.song.artist.name;
   songSpan.textContent   = player.data.song.name;
   songDuration           = player.video.duration;
@@ -154,7 +193,7 @@ function onVideoReady(v) {
   const hardPages    = [...flipbook.querySelectorAll(".hard")];
   const insertBefore = hardPages[hardPages.length - 2];
 
-  // Inject pages — lyric first (becomes right page), blank second (becomes left)
+  // Build lyric page divs (each lyric page is paired with a blank back)
   pages.forEach((page, i) => {
     const div = document.createElement("div");
     div.className = "page";
@@ -162,8 +201,7 @@ function onVideoReady(v) {
       <div class="page-content">
         <p class="page-section">${page.label}</p>
         <p class="lyric" id="lyric-${i}"></p>
-      </div>
-    `;
+      </div>`;
     flipbook.insertBefore(div, insertBefore);
 
     const blank = document.createElement("div");
@@ -171,7 +209,18 @@ function onVideoReady(v) {
     flipbook.insertBefore(blank, insertBefore);
   });
 
-  // Slot lyrics character-by-character, with per-character spans
+  // --- Extra blank spread after the last lyric page ---
+  // Turn.js works in page pairs; insert two blank pages so the
+  // final spread before "Fin." is completely empty.
+  const blankEndA = document.createElement("div");
+  blankEndA.className = "page blank";
+  flipbook.insertBefore(blankEndA, insertBefore);
+
+  const blankEndB = document.createElement("div");
+  blankEndB.className = "page blank";
+  flipbook.insertBefore(blankEndB, insertBefore);
+
+  // Populate lyrics character by character
   let lastPhrasePage = -1;
   let char = player.video.firstChar;
   while (char) {
@@ -182,15 +231,14 @@ function onVideoReady(v) {
     if (pageIdx !== -1) {
       const el = document.getElementById(`lyric-${pageIdx}`);
       if (el) {
-        // line break before a new phrase on the same page
-        const currentPhrase = char.parent?.parent;
-        const previousPhrase = char.previous?.parent?.parent;
-        if (lastPhrasePage === pageIdx && currentPhrase !== previousPhrase) {
+        const curPhrase  = char.parent?.parent;
+        const prevPhrase = char.previous?.parent?.parent;
+        if (lastPhrasePage === pageIdx && curPhrase !== prevPhrase) {
           el.appendChild(document.createElement("br"));
-      }
+        }
         const span = document.createElement("span");
-        span.className = "char";
-        span.textContent = char.text;
+        span.className     = "char";
+        span.textContent   = char.text;
         span.dataset.start = char.startTime;
         el.appendChild(span);
         lastPhrasePage = pageIdx;
@@ -199,61 +247,51 @@ function onVideoReady(v) {
     char = char.next;
   }
 
+  // Fit all lyrics before Turn.js locks the layout
+  fitLyrics();
+
   // Init Turn.js
   $("#flipbook").turn({
-    width: 800,
-    height: 500,
-    autoCenter: true,
-    display: "double",
+    width:        800,
+    height:       500,
+    autoCenter:   true,
+    display:      "double",
     acceleration: true,
-    gradients: true,
-    duration: 1500,
-    turnCorners: "",
-  });
-
-  $("#flipbook").bind("start", function () {
-    isTurning = true;
-  });
-  $("#flipbook").bind("turned", function () {
-    isTurning = false;
+    gradients:    true,
+    duration:     1500,
+    turnCorners:  "",
   });
 
   flipbookReady = true;
   document.getElementById("flipbook").classList.add("ready");
   document.getElementById("loading").classList.add("hidden");
 
-  // Disable ALL mouse interaction — song controls page turning
   $("#flipbook").turn("disable", true);
 
-  // Event delegation on cover click — still works despite disable
   $("#flipbook").on("click", ".hard", function () {
-    if ($("#flipbook").turn("page") === 1) {
-      openAndPlay();
-    }
+    if ($("#flipbook").turn("page") === 1) openAndPlay();
   });
 }
 
-function onTimerReady(t) {
+function onTimerReady() {
   playerReady = true;
   document.querySelectorAll("button, input").forEach((el) => (el.disabled = false));
-  // Start on the cover — no page navigation yet
   prevPageBtn.disabled = true;
   nextPageBtn.disabled = true;
 }
 
 function onThrottledTimeUpdate(position) {
   positionEl.textContent = String(Math.floor(position));
-  if (songDuration > 0) {
-    seekbar.value = (position / songDuration) * 100;
-  }
+  if (songDuration > 0) seekbar.value = (position / songDuration) * 100;
 
-  // Reveal characters whose start time has arrived
+  // Reveal chars on time
   if (player.video) {
     let c = player.video.firstChar;
     while (c) {
       if (c.startTime <= position && !revealedChars.has(c)) {
-        const spans = document.querySelectorAll(`span.char[data-start="${c.startTime}"]`);
-        spans.forEach((s) => s.classList.add("visible"));
+        document
+          .querySelectorAll(`span.char[data-start="${c.startTime}"]`)
+          .forEach((s) => s.classList.add("visible"));
         revealedChars.add(c);
       } else if (c.startTime > position) {
         break;
@@ -264,12 +302,11 @@ function onThrottledTimeUpdate(position) {
 
   if (!bookOpened) return;
 
-  // Jump to Fin when song ends
+  // End of song → jump to Fin page
   if (songDuration > 0 && position >= songDuration - 500) {
-    bookOpened = false;
+    bookOpened       = false;
     currentPageIndex = -1;
-    const totalPages = $("#flipbook").turn("pages");
-    $("#flipbook").turn("page", totalPages);
+    $("#flipbook").turn("page", $("#flipbook").turn("pages"));
     prevPageBtn.disabled = true;
     nextPageBtn.disabled = true;
     return;
@@ -283,17 +320,13 @@ function onThrottledTimeUpdate(position) {
   }
 }
 
-function onPlay() {}
-
+function onPlay()  {}
 function onPause() {}
 
 function onStop() {
   currentPageIndex = -1;
-  bookOpened = false;
+  bookOpened       = false;
   revealedChars.clear();
   document.querySelectorAll("span.char").forEach((s) => s.classList.remove("visible"));
-  if (flipbookReady) {
-    const lastPage = $("#flipbook").turn("pages");
-    $("#flipbook").turn("page", lastPage);
-  }
+  if (flipbookReady) $("#flipbook").turn("page", $("#flipbook").turn("pages"));
 }
