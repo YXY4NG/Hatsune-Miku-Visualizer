@@ -247,8 +247,6 @@ function onVideoReady() {
     char = char.next;
   }
 
-  // Fit all lyrics before Turn.js locks the layout
-  fitLyrics();
 
   // Init Turn.js
   $("#flipbook").turn({

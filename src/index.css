@@ -42,7 +42,7 @@ body::after {
 /* ---- Flipbook ---- */
 .flipbook {
   height: 500px;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.18), 0 4px 12px rgba(0,0,0,0.1);
+  box-shadow: 0 20px 60px rgba(120,90,60,0.25), 0 4px 12px rgba(120,90,60,0.15);
   cursor: pointer;
   visibility: hidden;
 }
@@ -88,7 +88,7 @@ body::after {
 .flipbook .page {
   background-color: var(--paper);
   background-image: linear-gradient(var(--paper-line) 1px, transparent 1px);
-  background-size: 100% 3rem;
+  background-size: 100% 2.85rem;
   border-left: 3px solid var(--margin-red);
   width: 400px;
   height: 500px;
@@ -101,7 +101,7 @@ body::after {
   align-items: flex-start;
   justify-content: flex-start;
   /* top = 3rem aligns content to the ruled grid */
-  padding: 3rem 2rem 1.5rem 3.5rem;
+  padding: 2.85rem 1.75rem 1.5rem 2rem;
   height: 100%;
   overflow: hidden;
   position: relative;
@@ -121,15 +121,16 @@ body::after {
 
 .page-section {
   flex-shrink: 0;
-  font-size: 0.72rem;         /* = 11.52px */
-  line-height: 0.72rem;
-  height: 0.72rem;
+  display: flex;
+  align-items: center;
+  font-size: 0.72rem;
+  line-height: 1;
+  height: 2.85rem;
   color: var(--margin-red);
   font-style: italic;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  /* margin-bottom brings the total slot to exactly 3rem (one rule) */
-  margin: 0 0 2.28rem 0;
+  margin: 0;
   padding-left: 0.25rem;
   opacity: 0.9;
 }
@@ -145,7 +146,7 @@ body::after {
 .lyric {
   font-size: 1.6rem;
   font-weight: 400;
-  line-height: 3rem;          /* matches rule grid; JS will override per page */
+  line-height: 2.85rem;          /* matches rule grid; JS will override per page */
   color: var(--pencil);
   white-space: normal;
   word-break: break-word;
