@@ -243,3 +243,10 @@ body::after {
   transition: opacity 0.6s ease;
 }
 #loading.hidden { opacity: 0; pointer-events: none; }
+
+.flipbook .hard:empty {
+  background-color: var(--paper);
+  background-image: linear-gradient(var(--paper-line) 1px, transparent 1px);
+  background-size: 100% 2.85rem;
+  border-left: 3px solid var(--margin-red);
+}
