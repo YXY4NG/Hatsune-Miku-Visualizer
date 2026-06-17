@@ -120,8 +120,30 @@ function showPage(index) {
 function openAndPlay() {
   if (!playerReady || bookOpened) return;
   bookOpened = true;
-  $("#flipbook").turn("page", 3);
-  player.requestPlay();
+  const book = $("#flipbook");
+
+  book.css({ transition: "opacity 0.25s ease", opacity: 0 });   // fade out
+  setTimeout(() => {
+    book.turn("display", "double");
+    book.turn("size", 800, 500);   // resize now, while invisible
+    book.css("opacity", 1);        // fade back in...
+    book.turn("page", 3);          // ...as the cover flips open
+    player.requestPlay();
+  }, 250);
+}
+
+// ---- Collapse to the lone back cover (mirror of openAndPlay) ----
+function showBackCover() {
+  if (!flipbookReady) return;
+  const book = $("#flipbook");
+
+  book.css({ transition: "opacity 0.25s ease", opacity: 0 });   // fade out
+  setTimeout(() => {
+    book.turn("display", "single");
+    book.turn("size", 400, 500);              // shrink to one page
+    book.turn("page", book.turn("pages"));    // land on Fin, alone and centered
+    book.css("opacity", 1);                   // fade back in
+  }, 250);
 }
 
 // ---- TextAlive Player ----
@@ -159,7 +181,16 @@ function onAppReady(app) {
       player.requestMediaSeek(0);
       bookOpened       = false;
       currentPageIndex = -1;
-      if (flipbookReady) $("#flipbook").turn("page", 1);
+      if (!flipbookReady) return;
+
+      const book = $("#flipbook");
+      book.css({ transition: "opacity 0.25s ease", opacity: 0 });   // fade out
+      setTimeout(() => {
+        book.turn("display", "single");
+        book.turn("size", 400, 500);
+        book.turn("page", 1);
+        book.css("opacity", 1);                                      // fade back in
+      }, 250);
     });
 
     seekbar.addEventListener("input", () => {
@@ -259,13 +290,13 @@ function onVideoReady() {
   introBlank.classList.remove("hard");
   introBlank.classList.add("page", "blank");
   introBlank.innerHTML = SKETCH_SVG;
-  
+
   // Init Turn.js
   $("#flipbook").turn({
-    width:        800,
+    width:        400,
     height:       500,
     autoCenter:   true,
-    display:      "double",
+    display:      "single",
     acceleration: true,
     gradients:    true,
     duration:     1500,
@@ -316,7 +347,7 @@ function onThrottledTimeUpdate(position) {
   if (songDuration > 0 && position >= songDuration - 500) {
     bookOpened       = false;
     currentPageIndex = -1;
-    $("#flipbook").turn("page", $("#flipbook").turn("pages"));
+    showBackCover();
     prevPageBtn.disabled = true;
     nextPageBtn.disabled = true;
     return;
@@ -331,6 +362,7 @@ function onThrottledTimeUpdate(position) {
 }
 
 function onPlay()  {}
+
 function onPause() {}
 
 function onStop() {
@@ -338,5 +370,5 @@ function onStop() {
   bookOpened       = false;
   revealedChars.clear();
   document.querySelectorAll("span.char").forEach((s) => s.classList.remove("visible"));
-  if (flipbookReady) $("#flipbook").turn("page", $("#flipbook").turn("pages"));
+  if (flipbookReady) showBackCover();
 }
