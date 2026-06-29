@@ -1,4 +1,7 @@
 import { Player } from "textalive-app-api";
+import coffeeImg from "./sketches/coffee-data.js";
+import windowImg from "./sketches/window-data.js";
+import curtainsImg from "./sketches/curtains-data.js";
 const $ = window.jQuery;
 
 // ---- Config ----
@@ -238,6 +241,9 @@ function onVideoReady() {
 
     const blank = document.createElement("div");
     blank.className = "page blank";
+    if (i === 1) blank.innerHTML = `<img class="sketch" src="${curtainsImg}" alt="Miku curtains sketch" style="width:285px;height:auto;margin-top:15%">`;
+    if (i === 2) blank.innerHTML = `<img class="sketch" src="${windowImg}" alt="Miku at window sketch" style="width:285px;height:auto;margin-top:15%">`;
+    if (i === 3) blank.innerHTML = `<img class="sketch" src="${coffeeImg}" alt="coffee latte art sketch" style="width:300px;height:auto;margin-top:10%">`;
     flipbook.insertBefore(blank, insertBefore);
   });
 
