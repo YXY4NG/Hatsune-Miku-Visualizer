@@ -177,6 +177,7 @@ function onAppReady(app) {
       if (!player.video) return;
       player.requestPause();
       player.requestMediaSeek(0);
+      document.querySelectorAll(".sketch.shown").forEach((s) => s.classList.remove("shown"));
       bookOpened       = false;
       currentPageIndex = -1;
       if (!flipbookReady) return;
@@ -241,9 +242,10 @@ function onVideoReady() {
 
     const blank = document.createElement("div");
     blank.className = "page blank";
-    if (i === 1) blank.innerHTML = `<img class="sketch" src="${curtainsImg}" alt="Miku curtains sketch" style="width:285px;height:auto;margin-top:15%">`;
+    blank.dataset.sketchIndex = i;
+    if (i === 1) blank.innerHTML = `<img class="sketch" src="${curtainsImg}" alt="Miku curtains sketch" style="width:285px;height:auto;margin-top:10%">`;
     if (i === 2) blank.innerHTML = `<img class="sketch" src="${windowImg}" alt="Miku at window sketch" style="width:285px;height:auto;margin-top:15%">`;
-    if (i === 3) blank.innerHTML = `<img class="sketch" src="${coffeeImg}" alt="coffee latte art sketch" style="width:300px;height:auto;margin-top:10%">`;
+    if (i === 3) blank.innerHTML = `<img class="sketch" src="${coffeeImg}" alt="coffee latte art sketch" style="width:285px;height:auto;margin-top:10%">`;
     flipbook.insertBefore(blank, insertBefore);
   });
 
@@ -308,6 +310,23 @@ function onVideoReady() {
   });
 }
 
+function revealVisibleSketches() {
+    const view = $("#flipbook").turn("view");   // array of page numbers in the current spread
+    view.forEach((p) => {
+      const blank = document.querySelector(`.page.blank[data-sketch-index]`);
+      document.querySelectorAll(".page.blank").forEach((b) => {
+        if (b.querySelector(".sketch")) {
+          const r = b.getBoundingClientRect();
+          if (r.width > 0 && r.height > 0) {
+            b.querySelector(".sketch").classList.add("shown");
+          }
+        }
+      });
+    });
+  }
+
+  $("#flipbook").bind("turned", revealVisibleSketches);
+
 function onTimerReady() {
   playerReady = true;
   document.querySelectorAll("button, input").forEach((el) => (el.disabled = false));
@@ -363,6 +382,7 @@ function onStop() {
   currentPageIndex = -1;
   bookOpened       = false;
   revealedChars.clear();
+  document.querySelectorAll(".sketch.shown").forEach((s) => s.classList.remove("shown"));
   document.querySelectorAll("span.char").forEach((s) => s.classList.remove("visible"));
   if (flipbookReady) showBackCover();
 }
