@@ -260,6 +260,10 @@ function onVideoReady() {
   blankEndB.className = "page blank";
   flipbook.insertBefore(blankEndB, insertBefore);
 
+  const introBlank = hardPages[1];
+  introBlank.classList.remove("hard");
+  introBlank.classList.add("page", "blank");
+
   // Populate lyrics character by character
   let lastPhrasePage = -1;
   let char = player.video.firstChar;
