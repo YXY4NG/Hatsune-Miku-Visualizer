@@ -22,6 +22,7 @@ const pages = [
 ];
 
 let revealedChars = new Set();
+let ignoreTicksUntil = 0;
 
 
 // ---- DOM refs ----
@@ -165,8 +166,10 @@ function onAppReady(app) {
     document.querySelector("#control").style.display = "flex";
 
     playBtn.addEventListener("click", () => {
+      ignoreTicksUntil = 0;
       if (!playerReady) return;
       bookOpened ? player.requestPlay() : openAndPlay();
+      
     });
 
     pauseBtn.addEventListener("click", () => {
@@ -175,20 +178,27 @@ function onAppReady(app) {
 
     rewindBtn.addEventListener("click", () => {
       if (!player.video) return;
+      ignoreTicksUntil = Date.now() + 400;
       player.requestPause();
       player.requestMediaSeek(0);
+
+      seekbar.value = 0;
+      positionEl.textContent = "0";
+      document.querySelectorAll("span.char.visible").forEach((s) => s.classList.remove("visible"));
+      revealedChars.clear();
       document.querySelectorAll(".sketch.shown").forEach((s) => s.classList.remove("shown"));
+
       bookOpened       = false;
       currentPageIndex = -1;
       if (!flipbookReady) return;
 
       const book = $("#flipbook");
-      book.css({ transition: "opacity 0.25s ease", opacity: 0 });   // fade out
+      book.css({ transition: "opacity 0.25s ease", opacity: 0 });
       setTimeout(() => {
         book.turn("display", "single");
         book.turn("size", 400, 500);
         book.turn("page", 1);
-        book.css("opacity", 1);                                      // fade back in
+        book.css("opacity", 1);
       }, 250);
     });
 
@@ -339,6 +349,7 @@ function onTimerReady() {
 }
 
 function onThrottledTimeUpdate(position) {
+  if (Date.now() < ignoreTicksUntil) return;
   positionEl.textContent = String(Math.floor(position));
   if (songDuration > 0) seekbar.value = (position / songDuration) * 100;
 
