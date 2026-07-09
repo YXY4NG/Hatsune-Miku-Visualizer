@@ -43,6 +43,8 @@ let currentPageIndex = -1;
 let flipbookReady    = false;
 let playerReady      = false;
 let bookOpened       = false;
+let bookSettled      = false;
+let awaitingStart    = false;
 
 // ---- Fit lyrics into their page box ----
 // Available area after layout changes in CSS:
@@ -99,6 +101,7 @@ function fitLyrics() {
 }
 
 // ---- Show page ----
+
 function showPage(index) {
   if (index < 0 || index >= pages.length) return;
   currentPageIndex = index;
@@ -119,14 +122,18 @@ function showPage(index) {
 function openAndPlay() {
   if (!playerReady || bookOpened) return;
   bookOpened = true;
+  bookSettled = false;
+  ignoreTicksUntil = Date.now() + 700;
   const book = $("#flipbook");
 
-  book.css({ transition: "opacity 0.25s ease", opacity: 0 });   // fade out
+  book.css({ transition: "opacity 0.25s ease", opacity: 0 });
   setTimeout(() => {
     book.turn("display", "double");
-    book.turn("size", 800, 500);   // resize now, while invisible
-    book.css("opacity", 1);        // fade back in...
-    book.turn("page", 3);          // ...as the cover flips open
+    book.turn("size", 800, 500);
+    book.turn("page", 3);
+    book.css("opacity", 1);
+    bookSettled = true;          // book is genuinely ready now
+    awaitingStart = true;
     player.requestPlay();
   }, 250);
 }
@@ -167,6 +174,7 @@ function onAppReady(app) {
 
     playBtn.addEventListener("click", () => {
       ignoreTicksUntil = 0;
+      awaitingStart    = false;
       if (!playerReady) return;
       bookOpened ? player.requestPlay() : openAndPlay();
       
@@ -189,6 +197,8 @@ function onAppReady(app) {
       document.querySelectorAll(".sketch.shown").forEach((s) => s.classList.remove("shown"));
 
       bookOpened       = false;
+      bookSettled      = false;
+      awaitingStart    = false;
       currentPageIndex = -1;
       if (!flipbookReady) return;
 
@@ -349,6 +359,10 @@ function onTimerReady() {
 }
 
 function onThrottledTimeUpdate(position) {
+  if (awaitingStart) {
+    if (position > 2000) return;   // stale resume position — swallow it
+    awaitingStart = false;         // reached the actual start; proceed normally
+  }
   if (Date.now() < ignoreTicksUntil) return;
   positionEl.textContent = String(Math.floor(position));
   if (songDuration > 0) seekbar.value = (position / songDuration) * 100;
@@ -369,7 +383,7 @@ function onThrottledTimeUpdate(position) {
     }
   }
 
-  if (!bookOpened) return;
+  if (!bookOpened || !bookSettled) return;
 
   // End of song → jump to Fin page
   if (songDuration > 0 && position >= songDuration - 500) {
@@ -396,6 +410,8 @@ function onPause() {}
 function onStop() {
   currentPageIndex = -1;
   bookOpened       = false;
+  bookSettled      = false;
+  awaitingStart    = false;
   revealedChars.clear();
   document.querySelectorAll(".sketch.shown").forEach((s) => s.classList.remove("shown"));
   document.querySelectorAll("span.char").forEach((s) => s.classList.remove("visible"));
