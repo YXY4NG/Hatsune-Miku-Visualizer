@@ -45,6 +45,8 @@ let playerReady      = false;
 let bookOpened       = false;
 let bookSettled      = false;
 let awaitingStart    = false;
+let revealedSpans = [];
+let shownSketches = [];
 
 // ---- Fit lyrics into their page box ----
 // Available area after layout changes in CSS:
@@ -192,9 +194,11 @@ function onAppReady(app) {
 
       seekbar.value = 0;
       positionEl.textContent = "0";
-      document.querySelectorAll("span.char.visible").forEach((s) => s.classList.remove("visible"));
+      revealedSpans.forEach((s) => s.classList.remove("visible"));
+      revealedSpans = [];
       revealedChars.clear();
-      document.querySelectorAll(".sketch.shown").forEach((s) => s.classList.remove("shown"));
+      shownSketches.forEach((s) => s.classList.remove("shown"));
+      shownSketches = [];
 
       bookOpened       = false;
       bookSettled      = false;
@@ -216,11 +220,25 @@ function onAppReady(app) {
       if (!player.video || songDuration <= 0) return;
       const seekTo = (seekbar.value / 100) * songDuration;
 
-      document.querySelectorAll("span.char.visible").forEach((s) => {
-        if (parseFloat(s.dataset.start) > seekTo) s.classList.remove("visible");
+      revealedSpans = revealedSpans.filter((s) => {
+        if (parseFloat(s.dataset.start) > seekTo) {
+          s.classList.remove("visible");
+          return false;
+        }
+        return true;
       });
       revealedChars.forEach((c) => {
         if (c.startTime > seekTo) revealedChars.delete(c);
+      });
+
+      shownSketches = shownSketches.filter((sk) => {
+        const blank = sk.closest(".page.blank");
+        const idx = blank ? parseInt(blank.dataset.sketchIndex, 10) : -1;
+        if (idx >= 0 && pages[idx] && seekTo < pages[idx].start) {
+          sk.classList.remove("shown");
+          return false;
+        }
+        return true;
       });
 
       player.requestMediaSeek(seekTo);
@@ -342,7 +360,9 @@ function revealVisibleSketches() {
         if (b.querySelector(".sketch")) {
           const r = b.getBoundingClientRect();
           if (r.width > 0 && r.height > 0) {
-            b.querySelector(".sketch").classList.add("shown");
+            const sk = b.querySelector(".sketch");
+            sk.classList.add("shown");
+            shownSketches.push(sk);
           }
         }
       });
@@ -374,7 +394,10 @@ function onThrottledTimeUpdate(position) {
       if (c.startTime <= position && !revealedChars.has(c)) {
         document
           .querySelectorAll(`span.char[data-start="${c.startTime}"]`)
-          .forEach((s) => s.classList.add("visible"));
+          .forEach((s) => {
+            s.classList.add("visible");
+            revealedSpans.push(s);
+          });
         revealedChars.add(c);
       } else if (c.startTime > position) {
         break;
@@ -413,7 +436,9 @@ function onStop() {
   bookSettled      = false;
   awaitingStart    = false;
   revealedChars.clear();
-  document.querySelectorAll(".sketch.shown").forEach((s) => s.classList.remove("shown"));
-  document.querySelectorAll("span.char").forEach((s) => s.classList.remove("visible"));
+  shownSketches.forEach((s) => s.classList.remove("shown"));
+  shownSketches = [];
+  revealedSpans.forEach((s) => s.classList.remove("visible"));
+  revealedSpans = [];
   if (flipbookReady) showBackCover();
 }
