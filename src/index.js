@@ -10,15 +10,15 @@ const APP_TOKEN = "1HJzpsZ11CfoUPrr";
 
 // ---- Page splits (ms) ----
 const pages = [
-  { start: 0,      end: 28000,    label: "Intro"    },
-  { start: 28000,  end: 41000,    label: "Verse 1"  },
-  { start: 41000,  end: 70000,    label: "Verse 2"  },
-  { start: 70000,  end: 111000,   label: "Chorus 1" },
-  { start: 111000, end: 141000,   label: "Verse 3"  },
-  { start: 141000, end: 168000,   label: "Chorus 2" },
-  { start: 168000, end: 191000,   label: "Verse 4"  },
-  { start: 191000, end: 218000,   label: "Chorus 3" },
-  { start: 218000, end: 99999999, label: "Verse 5"  },
+  { start: 0,      end: 28000,    label: "其の一" },
+  { start: 28000,  end: 41000,    label: "其の二" },
+  { start: 41000,  end: 70000,    label: "其の三" },
+  { start: 70000,  end: 111000,   label: "其の四" },
+  { start: 111000, end: 141000,   label: "其の五" },
+  { start: 141000, end: 168000,   label: "其の六" },
+  { start: 168000, end: 191000,   label: "其の七" },
+  { start: 191000, end: 218000,   label: "其の八" },
+  { start: 218000, end: 99999999, label: "其の九" },
 ];
 
 let revealedChars = new Set();
@@ -143,6 +143,7 @@ function openAndPlay() {
 // ---- Collapse to the lone back cover (mirror of openAndPlay) ----
 function showBackCover() {
   if (!flipbookReady) return;
+  if (pageLabel) pageLabel.textContent = "";
   const book = $("#flipbook");
 
   book.css({ transition: "opacity 0.25s ease", opacity: 0 });   // fade out
@@ -204,6 +205,7 @@ function onAppReady(app) {
       bookSettled      = false;
       awaitingStart    = false;
       currentPageIndex = -1;
+      if (pageLabel) pageLabel.textContent = "";
       if (!flipbookReady) return;
 
       const book = $("#flipbook");
