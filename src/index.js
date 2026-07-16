@@ -2,6 +2,7 @@ import { Player } from "textalive-app-api";
 import coffeeImg from "./sketches/coffee-data.js";
 import windowImg from "./sketches/window-data.js";
 import curtainsImg from "./sketches/curtains-data.js";
+import coverSketchImg from "./sketches/cover-sketch-data.js";
 const $ = window.jQuery;
 
 // ---- Config ----
@@ -288,6 +289,12 @@ function onVideoReady() {
     if (i === 3) blank.innerHTML = `<img class="sketch" src="${coffeeImg}" alt="coffee latte art sketch" style="width:285px;height:auto;margin-top:10%">`;
     flipbook.insertBefore(blank, insertBefore);
   });
+
+  const coverImg = document.createElement("img");
+  coverImg.src = coverSketchImg;
+  coverImg.className = "cover-emblem";
+  coverImg.alt = "Miku cover sketch";
+  document.querySelector(".cover-front").appendChild(coverImg);
 
   // --- Extra blank spread after the last lyric page ---
   // Turn.js works in page pairs; insert two blank pages so the
