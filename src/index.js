@@ -237,11 +237,23 @@ function onAppReady(app) {
       shownSketches = shownSketches.filter((sk) => {
         const blank = sk.closest(".page.blank");
         const idx = blank ? parseInt(blank.dataset.sketchIndex, 10) : -1;
-        if (idx >= 0 && pages[idx] && seekTo < pages[idx].start) {
+        const section = pages[idx + 1];
+        if (idx >= 0 && section && seekTo < section.start) {
           sk.classList.remove("shown");
           return false;
         }
         return true;
+      });
+
+      document.querySelectorAll(".page.blank[data-sketch-index]").forEach((b) => {
+        const sk = b.querySelector(".sketch");
+        if (!sk || sk.classList.contains("shown")) return;
+        const idx = parseInt(b.dataset.sketchIndex, 10);
+        const section = pages[idx + 1];
+        if (section && seekTo >= section.start) {
+          sk.classList.add("shown");
+          shownSketches.push(sk);
+        }
       });
 
       player.requestMediaSeek(seekTo);
@@ -295,6 +307,11 @@ function onVideoReady() {
   coverImg.className = "cover-emblem";
   coverImg.alt = "Miku cover sketch";
   document.querySelector(".cover-front").appendChild(coverImg);
+  const coverImgBack = document.createElement("img");
+  coverImgBack.src = coverSketchImg;
+  coverImgBack.className = "cover-emblem";
+  coverImgBack.alt = "Miku cover sketch";
+  document.querySelector(".cover-back").appendChild(coverImgBack);
 
   // --- Extra blank spread after the last lyric page ---
   // Turn.js works in page pairs; insert two blank pages so the

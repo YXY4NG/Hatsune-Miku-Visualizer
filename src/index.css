@@ -278,16 +278,19 @@ body::after {
   border-radius: 0 14px 14px 0;
 }
 
-.cover-front .cover-title {
+.cover-front .cover-title,
+.cover-back .cover-title {
   position: absolute;
   top: 7rem;
   left: 50%;
   transform: translateX(-50%);
   width: 100%;
   text-align: center;
-  padding-left: 2rem;
   font-size: 1.6rem;
 }
+
+.cover-front .cover-title { padding-left: 2rem; }
+.cover-back .cover-title  { padding-right: 0rem; }
 .flipbook .hard.cover-back {
   border-radius: 14px 0 0 14px;
 }
@@ -344,6 +347,15 @@ body::after {
 }
 
 .cover-front .cover-emblem {
+  position: absolute;
+  top: 56%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 135px;
+  pointer-events: none;
+}
+
+.cover-back .cover-emblem {
   position: absolute;
   top: 56%;
   left: 50%;
