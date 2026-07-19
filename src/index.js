@@ -3,6 +3,7 @@ import coffeeImg from "./sketches/coffee-data.js";
 import windowImg from "./sketches/window-data.js";
 import curtainsImg from "./sketches/curtains-data.js";
 import coverSketchImg from "./sketches/cover-sketch-data.js";
+import finSketchImg from "./sketches/fin-sketch-data.js";
 const $ = window.jQuery;
 
 // ---- Config ----
@@ -308,7 +309,7 @@ function onVideoReady() {
   coverImg.alt = "Miku cover sketch";
   document.querySelector(".cover-front").appendChild(coverImg);
   const coverImgBack = document.createElement("img");
-  coverImgBack.src = coverSketchImg;
+  coverImgBack.src = finSketchImg;
   coverImgBack.className = "cover-emblem";
   coverImgBack.alt = "Miku cover sketch";
   document.querySelector(".cover-back").appendChild(coverImgBack);
