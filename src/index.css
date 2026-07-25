@@ -17,6 +17,7 @@ body {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
+  cursor: url("pen-cursor.png") 0 31, auto;
 }
 
 body::after {
@@ -43,11 +44,11 @@ body::after {
 .flipbook {
   height: 500px;
   box-shadow: 0 20px 60px rgba(120,90,60,0.25), 0 4px 12px rgba(120,90,60,0.15);
-  cursor: pointer;
+  cursor: url("pen-cursor.png") 0 31, pointer;
   visibility: hidden;
 }
 .flipbook.ready { visibility: visible; }
-.flipbook.open  { cursor: default; }
+.flipbook.open  { cursor: url("pen-cursor.png") 0 31, pointer; }
 
 .flipbook .hard {
   background: #4a3528;
@@ -160,13 +161,13 @@ body::after {
   background: transparent;
   border: none;
   color: var(--pencil-soft);
-  cursor: pointer;
+  cursor: url("pen-cursor.png") 0 31, pointer;
   padding: 0 1rem;
   transition: all 0.2s;
   z-index: 3;
 }
 .page-nav:hover:not(:disabled) { color: var(--pencil); transform: scale(1.2); }
-.page-nav:disabled { opacity: 0.2; cursor: not-allowed; }
+.page-nav:disabled { opacity: 0.2; cursor: url("pen-cursor.png") 0 31, not-allowed; }
 
 /* ---- Header ---- */
 #header {
@@ -204,13 +205,13 @@ body::after {
   border: 1.5px solid var(--pencil-soft);
   border-radius: 10px 7px 11px 6px;
   color: var(--pencil);
-  cursor: pointer;
+  cursor: url("pen-cursor.png") 0 31, pointer;
   transition: all 0.15s;
 }
 #control button:hover:not(:disabled) { background: #4a3528; color: #f5ece0; }
-#control button:disabled { opacity: 0.3; cursor: not-allowed; }
+#control button:disabled { opacity: 0.3; cursor: url("pen-cursor.png") 0 31, not-allowed; }
 
-#seekbar { width: 160px; cursor: pointer; accent-color: #4a3528; }
+#seekbar { width: 160px; cursor: url("pen-cursor.png") 0 31, pointer; accent-color: #4a3528; }
 
 #media {
   position: fixed;
