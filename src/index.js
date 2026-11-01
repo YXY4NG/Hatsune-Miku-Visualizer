@@ -62,6 +62,10 @@ let bookSettled      = false;
 let awaitingStart    = false;
 let revealedSpans = [];
 let shownSketches = [];
+let catchUpPending = false;   // after a seek, hold lyric reveals until the flip ends
+let catchUpTimer   = null;
+let sweepTimers    = [];
+let sweepQueue     = [];
 
 // ---- Fit lyrics into their page box ----
 // Available area after layout changes in CSS:
@@ -133,6 +137,100 @@ function showPage(index) {
   if (pageLabel)   pageLabel.textContent  = `${index + 1} / ${pages.length}`;
   if (prevPageBtn) prevPageBtn.disabled   = index === 0;
   if (nextPageBtn) nextPageBtn.disabled   = index === pages.length - 1;
+}
+
+function pageIndexAt(position) {
+  return pages.findIndex((pg) => position >= pg.start && position < pg.end);
+}
+
+// ---- Seek catch-up: flip in blank, then fade the sketch and re-write the lyrics ----
+
+// Remove a class without its fade (for pages that are off-screen)
+function hideNow(el, cls) {
+  el.style.transition = "none";
+  el.classList.remove(cls);
+  void el.offsetWidth;
+  el.style.transition = "";
+}
+
+// Blank out a lyric page and its facing sketch before flipping to it
+function hidePage(index) {
+  const lyric = document.getElementById(`lyric-${index}`);
+  if (lyric) {
+    const starts = new Set();
+    lyric.querySelectorAll("span.char").forEach((s) => {
+      starts.add(parseFloat(s.dataset.start));
+      hideNow(s, "visible");
+    });
+    revealedSpans = revealedSpans.filter((s) => !lyric.contains(s));
+    revealedChars.forEach((c) => {
+      if (starts.has(c.startTime)) revealedChars.delete(c);
+    });
+  }
+  const sk = document.querySelector(`.page.blank[data-sketch-index="${index - 1}"] .sketch`);
+  if (sk) {
+    hideNow(sk, "shown");
+    shownSketches = shownSketches.filter((s) => s !== sk);
+  }
+}
+
+// Finish any running sweep at once
+function cancelSweep() {
+  sweepTimers.forEach(clearTimeout);
+  sweepTimers = [];
+  sweepQueue.forEach((s) => s.classList.add("visible"));
+  sweepQueue = [];
+}
+
+function startCatchUp() {
+  catchUpPending = true;
+  if (!catchUpTimer) catchUpTimer = setInterval(checkCatchUp, 100);
+}
+
+function stopCatchUp() {
+  cancelSweep();
+  clearInterval(catchUpTimer);
+  catchUpTimer   = null;
+  catchUpPending = false;
+}
+
+// Polls until the book has flipped to the page for the current position
+function checkCatchUp() {
+  if (!bookOpened || !bookSettled) return stopCatchUp();
+  const position = player.timer.position;
+  const index    = pageIndexAt(position);
+  if (index !== currentPageIndex) showPage(index);
+  if ($("#flipbook").turn("animating")) return;
+  clearInterval(catchUpTimer);
+  catchUpTimer = null;
+  sweepLyrics(position);
+}
+
+// Reveal every char sung so far: a quick write-on for the visible page,
+// instantly for pages that are off-screen
+function sweepLyrics(position) {
+  const onPage = [];
+  for (let c = player.video.firstChar; c && c.startTime <= position; c = c.next) {
+    if (revealedChars.has(c)) continue;
+    revealedChars.add(c);
+    document.querySelectorAll(`span.char[data-start="${c.startTime}"]`).forEach((s) => {
+      revealedSpans.push(s);
+      if (s.closest(`#lyric-${currentPageIndex}`)) onPage.push(s);
+      else s.classList.add("visible");
+    });
+  }
+
+  // ~1s for a full page, at most 60ms per char
+  const step = Math.min(60, 1000 / Math.max(onPage.length, 1));
+  sweepQueue = onPage;
+  onPage.forEach((s, i) => {
+    sweepTimers.push(setTimeout(() => s.classList.add("visible"), i * step));
+  });
+  sweepTimers.push(setTimeout(() => {
+    sweepTimers    = [];
+    sweepQueue     = [];
+    catchUpPending = false;
+  }, onPage.length * step));
 }
 
 // ---- Open book and start playback ----
@@ -207,6 +305,7 @@ function onAppReady(app) {
       ignoreTicksUntil = Date.now() + 400;
       player.requestPause();
       player.requestMediaSeek(0);
+      stopCatchUp();
 
       seekbar.value = 0;
       positionEl.textContent = "0";
@@ -236,6 +335,7 @@ function onAppReady(app) {
     seekbar.addEventListener("input", () => {
       if (!player.video || songDuration <= 0) return;
       const seekTo = (seekbar.value / 100) * songDuration;
+      cancelSweep();
 
       revealedSpans = revealedSpans.filter((s) => {
         if (parseFloat(s.dataset.start) > seekTo) {
@@ -259,16 +359,12 @@ function onAppReady(app) {
         return true;
       });
 
-      document.querySelectorAll(".page.blank[data-sketch-index]").forEach((b) => {
-        const sk = b.querySelector(".sketch");
-        if (!sk || sk.classList.contains("shown")) return;
-        const idx = parseInt(b.dataset.sketchIndex, 10);
-        const section = pages[idx + 1];
-        if (section && seekTo >= section.start) {
-          sk.classList.add("shown");
-          shownSketches.push(sk);
-        }
-      });
+      // Landing on another page: flip to it blank, then fade it in
+      if (bookOpened) {
+        const landing = pageIndexAt(seekTo);
+        if (landing !== currentPageIndex) hidePage(landing);
+        startCatchUp();
+      }
 
       player.requestMediaSeek(seekTo);
     });
@@ -429,8 +525,8 @@ function onThrottledTimeUpdate(position) {
   positionEl.textContent = String(Math.floor(position));
   if (songDuration > 0) seekbar.value = (position / songDuration) * 100;
 
-  // Reveal chars on time
-  if (player.video) {
+  // Reveal chars on time (held while a seek catch-up is running)
+  if (player.video && !catchUpPending) {
     let c = player.video.firstChar;
     while (c) {
       if (c.startTime <= position && !revealedChars.has(c)) {
@@ -473,6 +569,7 @@ function onPlay()  {}
 function onPause() {}
 
 function onStop() {
+  stopCatchUp();
   currentPageIndex = -1;
   bookOpened       = false;
   bookSettled      = false;
