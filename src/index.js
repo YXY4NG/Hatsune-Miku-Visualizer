@@ -23,6 +23,19 @@ const pages = [
   { start: 218000, end: 99999999, label: "其の九" },
 ];
 
+// ---- Sketches on the left page of each spread (one per 3 lyric pages) ----
+const spreadSketches = [
+  { src: curtainsImg, alt: "Miku curtains sketch",    marginTop: "10%" },
+  { src: windowImg,   alt: "Miku at window sketch",   marginTop: "15%" },
+  { src: coffeeImg,   alt: "coffee latte art sketch", marginTop: "10%" },
+];
+
+// Sketch for the spread whose right-hand page is lyric page `pageIdx`
+function sketchHtml(pageIdx) {
+  const s = spreadSketches[Math.floor(pageIdx / 3)];
+  return `<img class="sketch" src="${s.src}" alt="${s.alt}" style="width:285px;height:auto;margin-top:${s.marginTop}">`;
+}
+
 let revealedChars = new Set();
 let ignoreTicksUntil = 0;
 
@@ -297,9 +310,8 @@ function onVideoReady() {
     const blank = document.createElement("div");
     blank.className = "page blank";
     blank.dataset.sketchIndex = i;
-    if (i === 1) blank.innerHTML = `<img class="sketch" src="${curtainsImg}" alt="Miku curtains sketch" style="width:285px;height:auto;margin-top:10%">`;
-    if (i === 2) blank.innerHTML = `<img class="sketch" src="${windowImg}" alt="Miku at window sketch" style="width:285px;height:auto;margin-top:15%">`;
-    if (i === 3) blank.innerHTML = `<img class="sketch" src="${coffeeImg}" alt="coffee latte art sketch" style="width:285px;height:auto;margin-top:10%">`;
+    // Blank i faces lyric page i + 1; the last one faces the empty end spread
+    if (i + 1 < pages.length) blank.innerHTML = sketchHtml(i + 1);
     flipbook.insertBefore(blank, insertBefore);
   });
 
@@ -328,6 +340,9 @@ function onVideoReady() {
   const introBlank = hardPages[1];
   introBlank.classList.remove("hard");
   introBlank.classList.add("page", "blank");
+  // Faces lyric page 0; index -1 so seeking maps it to pages[0]
+  introBlank.dataset.sketchIndex = -1;
+  introBlank.innerHTML = sketchHtml(0);
 
   // Populate lyrics character by character
   let lastPhrasePage = -1;
