@@ -490,22 +490,18 @@ function onVideoReady() {
   });
 }
 
+// Fade in the sketch on the spread now showing. The left page of a spread is
+// book page p (even): page 2 is the intro blank (index -1), page 2k + 4 is blank k.
 function revealVisibleSketches() {
-    const view = $("#flipbook").turn("view");   // array of page numbers in the current spread
-    view.forEach((p) => {
-      const blank = document.querySelector(`.page.blank[data-sketch-index]`);
-      document.querySelectorAll(".page.blank").forEach((b) => {
-        if (b.querySelector(".sketch")) {
-          const r = b.getBoundingClientRect();
-          if (r.width > 0 && r.height > 0) {
-            const sk = b.querySelector(".sketch");
-            sk.classList.add("shown");
-            shownSketches.push(sk);
-          }
-        }
-      });
-    });
-  }
+  $("#flipbook").turn("view").forEach((p) => {
+    if (p % 2 !== 0) return;
+    const sk = document.querySelector(`.page.blank[data-sketch-index="${p / 2 - 2}"] .sketch`);
+    if (sk && !sk.classList.contains("shown")) {
+      sk.classList.add("shown");
+      shownSketches.push(sk);
+    }
+  });
+}
 
   $("#flipbook").bind("turned", revealVisibleSketches);
 
